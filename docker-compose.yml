@@ -1,7 +1,8 @@
 version: '3.2'
 services:
   app:
-    image: mosystems/dolibarr:10
+    restart: unless-stopped
+    image: mosystems/dolibarr:10-debug
     environment:
       - DOLIBARR_SETUP_LANG=en_US
       - DOLIBARR_MAIN_URL=https://erp.mosystems.biz
@@ -21,6 +22,7 @@ services:
       - ./config/app/conf.php:/www/conf/conf.php:rw
       - ./config/app/session.ini:/usr/local/etc/php/conf.d/session.ini:ro
       - ./config/app/dolibarr-install:/usr/local/bin/dolibarr-install:ro
+      - ./config/app/docker-entrypoint:/usr/local/bin/docker-entrypoint:ro
       - sessions:/sessions
     depends_on: 
       - db
