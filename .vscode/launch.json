@@ -10,7 +10,7 @@
             "request": "launch",
             "port": 9000,
             "pathMappings": {
-                "/www": "${workspaceRoot}/../dolibarr/htdocs",
+                "/www": "${workspaceRoot}/vendor/dolibarr/htdocs",
                 "/usr/local/bin": "${workspaceRoot}/config/app"
             }
         },
