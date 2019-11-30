@@ -9,7 +9,6 @@ fi
 
 if [ ! -e "/documents/install.lock" ]; then
     export XDEBUG_CONFIG='remote_enable=1 remote_autostart=1 remote_host=172.17.0.1'
-    # send dolibarr install output to docker logs
     dolibarr-install
 fi
 
