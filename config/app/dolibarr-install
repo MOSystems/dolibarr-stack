@@ -24,44 +24,51 @@ $step = isset($argv[1]) ? $argv[1] : 'install';
 switch ($step) {
     case 'install':
         passthru($argv[0].' step1', $err);
-        if ($err !== 0) exit($err);
+        if ($err !== 0) exit($err ?? 1);
         passthru($argv[0].' step2', $err);
-        if ($err !== 0) exit($err);
+        if ($err !== 0) exit($err ?? 1);
         passthru($argv[0].' step5', $err);
-        if ($err !== 0) exit($err);
+        if ($err !== 0) exit($err ?? 1);
         break;
 
     case 'step1':
         $options = array(
-            'dolibarr_main_url_root'       => "              \$_SERVER['DOLIBARR_MAIN_URL']     ?? ''",       
-            'dolibarr_main_db_host'        => "              \$_SERVER['DOLIBARR_DB_HOST']",
-            'dolibarr_main_db_port'        => "              \$_SERVER['DOLIBARR_DB_PORT']      ?? '3306'",
-            'dolibarr_main_db_name'        => "              \$_SERVER['DOLIBARR_DB_NAME']",
-            'dolibarr_main_db_user'        => "              \$_SERVER['DOLIBARR_DB_USER']",
-            'dolibarr_main_db_pass'        => "              \$_SERVER['DOLIBARR_DB_PASS']",
-            'dolibarr_main_authentication' => "              \$_SERVER['DOLIBARR_AUTH']         ?? 'dolibarr'",
+            'dolibarr_main_url_root'       =>               "\$_SERVER['DOLIBARR_MAIN_URL']     ?? ''",       
+            'dolibarr_main_db_host'        =>               "\$_SERVER['DOLIBARR_DB_HOST']",
+            'dolibarr_main_db_port'        =>               "\$_SERVER['DOLIBARR_DB_PORT']      ?? '3306'",
+            'dolibarr_main_db_name'        =>               "\$_SERVER['DOLIBARR_DB_NAME']",
+            'dolibarr_main_db_user'        =>               "\$_SERVER['DOLIBARR_DB_USER']",
+            'dolibarr_main_db_pass'        =>               "\$_SERVER['DOLIBARR_DB_PASS']",
+            'dolibarr_main_authentication' =>               "\$_SERVER['DOLIBARR_AUTH']         ?? 'dolibarr'",
             'dolibarr_main_prod'           => "(int) (bool) (\$_SERVER['DOLIBARR_PROD']         ?? 0)",
             'dolibarr_main_force_https'    => "(int) (bool) (\$_SERVER['DOLIBARR_FORCE_HTTPS']  ?? 0)",
             'dolibarr_nocsrfcheck'         => "(int) (bool) (\$_SERVER['DOLIBARR_NOCSRF_CHECK'] ?? 0)",
         );
 
+        function get_option($key) {
+            global $options;
+            return eval("return {$options[$key]};");
+        }
+
         $_POST['main_dir'] = '/www';
         $_POST['main_data_dir'] = '/documents';
-        $_POST['main_url'] = eval($options['dolibarr_main_url_root']);
+        $_POST['main_url'] = get_option('dolibarr_main_url_root');
         $_POST['db_user_root'] = '';
         $_POST['db_pass_root'] = '';
         $_POST['db_type'] = 'mysqli';
-        $_POST['db_host'] = eval($options['dolibarr_main_db_host']);
-        $_POST['db_name'] = eval($options['dolibarr_main_db_name']);
-        $_POST['db_user'] = eval($options['dolibarr_main_db_user']);
-        $_POST['db_pass'] = eval($options['dolibarr_main_db_pass']);
-        $_POST['db_port'] = eval($options['dolibarr_main_db_port']);
+        $_POST['db_host'] = get_option('dolibarr_main_db_host');
+        $_POST['db_name'] = get_option('dolibarr_main_db_name');
+        $_POST['db_user'] = get_option('dolibarr_main_db_user');
+        $_POST['db_pass'] = get_option('dolibarr_main_db_pass');
+        $_POST['db_port'] = get_option('dolibarr_main_db_port');
         $_POST['db_prefix'] = '';
         $_POST['db_create_database'] = '';
         $_POST['db_create_user'] = '';
-        $_POST['main_force_https'] = eval($options['dolibarr_main_force_https']);
+        $_POST['main_force_https'] = get_option('dolibarr_main_force_https');
         $_POST['main_use_alt_dir'] = 'on';
         $_POST['main_alt_dir_name'] = 'custom';
+
+        global $db;
 
         global $conf,$langs;
         global $main_url,$main_dir,$main_data_dir,$main_force_https,$main_use_alt_dir,$main_alt_dir_name,$main_db_prefix;
@@ -84,22 +91,22 @@ switch ($step) {
             $line = fgets($fp_conf_original);
             if (preg_match('/^\$('.join('|', array_keys($options)).')\s*=/', $line, $matches)) {
                 $key = $matches[1];
-                $line = "\${$key} = {$options[$key]};".PHP_EOL;
+                $line = "\${$key}={$options[$key]};".PHP_EOL;
             }
             fputs($fp_conf, $line);
         }
         fclose($fp_conf_original);
         // Add LDAP configuration
-        fputs($fp_conf, "\$dolibarr_main_auth_ldap_host            = \$_SERVER['DOLIBARR_LDAP_HOST']        ?? NULL;"   .PHP_EOL);
-        fputs($fp_conf, "\$dolibarr_main_auth_ldap_port            = \$_SERVER['DOLIBARR_LDAP_PORT']        ?? NULL;"   .PHP_EOL);
-        fputs($fp_conf, "\$dolibarr_main_auth_ldap_version         = \$_SERVER['DOLIBARR_LDAP_VERSION']     ?? '3';"    .PHP_EOL);
-        fputs($fp_conf, "\$dolibarr_main_auth_ldap_servertype      = \$_SERVER['DOLIBARR_LDAP_SERVER_TYPE'] ?? NULL;"   .PHP_EOL);
-        fputs($fp_conf, "\$dolibarr_main_auth_ldap_login_attribute = \$_SERVER['DOLIBARR_LDAP_LOGIN_ATTR']  ?? NULL;"   .PHP_EOL);
-        fputs($fp_conf, "\$dolibarr_main_auth_ldap_dn              = \$_SERVER['DOLIBARR_LDAP_DN']          ?? NULL;"   .PHP_EOL);
-        fputs($fp_conf, "\$dolibarr_main_auth_ldap_filter          = \$_SERVER['DOLIBARR_LDAP_FILTER']      ?? NULL;"   .PHP_EOL);
-        fputs($fp_conf, "\$dolibarr_main_auth_ldap_admin_login     = \$_SERVER['DOLIBARR_LDAP_ADMIN_LOGIN'] ?? NULL;"   .PHP_EOL);
-        fputs($fp_conf, "\$dolibarr_main_auth_ldap_admin_pass      = \$_SERVER['DOLIBARR_LDAP_ADMIN_PASS']  ?? NULL;"   .PHP_EOL);
-        fputs($fp_conf, "\$dolibarr_main_auth_ldap_debug           = \$_SERVER['DOLIBARR_LDAP_DEBUG']       ?? 'false';".PHP_EOL);
+        fputs($fp_conf, "\$dolibarr_main_auth_ldap_host=\$_SERVER['DOLIBARR_LDAP_HOST'] ?? NULL;".PHP_EOL);
+        fputs($fp_conf, "\$dolibarr_main_auth_ldap_port=\$_SERVER['DOLIBARR_LDAP_PORT'] ?? NULL;".PHP_EOL);
+        fputs($fp_conf, "\$dolibarr_main_auth_ldap_version=\$_SERVER['DOLIBARR_LDAP_VERSION'] ?? '3';".PHP_EOL);
+        fputs($fp_conf, "\$dolibarr_main_auth_ldap_servertype=\$_SERVER['DOLIBARR_LDAP_SERVER_TYPE'] ?? NULL;".PHP_EOL);
+        fputs($fp_conf, "\$dolibarr_main_auth_ldap_login_attribute=\$_SERVER['DOLIBARR_LDAP_LOGIN_ATTR'] ?? NULL;".PHP_EOL);
+        fputs($fp_conf, "\$dolibarr_main_auth_ldap_dn=\$_SERVER['DOLIBARR_LDAP_DN'] ?? NULL;".PHP_EOL);
+        fputs($fp_conf, "\$dolibarr_main_auth_ldap_filter=\$_SERVER['DOLIBARR_LDAP_FILTER'] ?? NULL;".PHP_EOL);
+        fputs($fp_conf, "\$dolibarr_main_auth_ldap_admin_login=\$_SERVER['DOLIBARR_LDAP_ADMIN_LOGIN'] ?? NULL;".PHP_EOL);
+        fputs($fp_conf, "\$dolibarr_main_auth_ldap_admin_pass=\$_SERVER['DOLIBARR_LDAP_ADMIN_PASS'] ?? NULL;".PHP_EOL);
+        fputs($fp_conf, "\$dolibarr_main_auth_ldap_debug=\$_SERVER['DOLIBARR_LDAP_DEBUG'] ?? 'false';".PHP_EOL);
         fclose($fp_conf);
         break;
 
@@ -122,10 +129,63 @@ switch ($step) {
         require './step5.php';
         ob_end_clean();
         break;
-    
+
+    case 'dbupdate':
+        require '../master.inc.php';
+        require '../core/lib/admin.lib.php';
+        // Set LDAP constants in database
+        $error=0;
+
+        $db->begin();
+        if (! dolibarr_set_const($db, 'LDAP_SERVER_TYPE', $dolibarr_main_auth_ldap_servertype, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_SERVER_PROTOCOLVERSION', $dolibarr_main_auth_ldap_version, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_SERVER_HOST', explode(',', $dolibarr_main_auth_ldap_host)[0], 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_SERVER_HOST_SLAVE', explode(',', $dolibarr_main_auth_ldap_host)[1] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_SERVER_PORT', $dolibarr_main_auth_ldap_port, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_SERVER_DN', $_SERVER['DOLIBARR_LDAP_SERVER_DN'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_ADMIN_DN', $dolibarr_main_auth_ldap_admin_login, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_ADMIN_PASS', $dolibarr_main_auth_ldap_admin_pass, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_SERVER_USE_TLS', $_SERVER['DOLIBARR_LDAP_SERVER_USE_TLS'] ?? 0, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_SYNCHRO_ACTIVE', 'ldap2dolibarr', 'chaine', 0, '', $conf->entity)) $error++;
+
+        if (! dolibarr_set_const($db, 'LDAP_USER_DN', $_SERVER['DOLIBARR_LDAP_USER_DN'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_USER_OBJECT_CLASS', $_SERVER['DOLIBARR_LDAP_USER_OBJECT_CLASS'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FILTER_CONNECTION', $_SERVER['DOLIBARR_LDAP_FILTER_CONNECTION'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_FULLNAME', $_SERVER['DOLIBARR_LDAP_FIELD_FULLNAME'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_LOGIN', $_SERVER['DOLIBARR_LDAP_FIELD_LOGIN'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_LOGIN_SAMBA', $_SERVER['DOLIBARR_LDAP_FIELD_LOGIN_SAMBA'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_PASSWORD', $_SERVER['DOLIBARR_LDAP_FIELD_PASSWORD'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_PASSWORD_CRYPTED', $_SERVER['DOLIBARR_LDAP_FIELD_PASSWORD_CRYPTED'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_NAME', $_SERVER['DOLIBARR_LDAP_FIELD_NAME'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_FIRSTNAME', $_SERVER['DOLIBARR_LDAP_FIELD_FIRSTNAME'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_MAIL', $_SERVER['DOLIBARR_LDAP_FIELD_MAIL'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_PHONE', $_SERVER['DOLIBARR_LDAP_FIELD_PHONE'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_MOBILE', $_SERVER['DOLIBARR_LDAP_FIELD_MOBILE'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_SKYPE', $_SERVER['DOLIBARR_LDAP_FIELD_SKYPE'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_FAX', $_SERVER['DOLIBARR_LDAP_FIELD_FAX'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_COMPANY', $_SERVER['DOLIBARR_LDAP_FIELD_COMPANY'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_ADDRESS', $_SERVER['DOLIBARR_LDAP_FIELD_ADDRESS'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_ZIP', $_SERVER['DOLIBARR_LDAP_FIELD_ZIP'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_TOWN', $_SERVER['DOLIBARR_LDAP_FIELD_TOWN'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_COUNTRY', $_SERVER['DOLIBARR_LDAP_FIELD_COUNTRY'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_DESCRIPTION', $_SERVER['DOLIBARR_LDAP_FIELD_DESCRIPTION'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_SID', $_SERVER['DOLIBARR_LDAP_FIELD_SID'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+        if (! dolibarr_set_const($db, 'LDAP_FIELD_TITLE', $_SERVER['DOLIBARR_LDAP_FIELD_TITLE'] ?? NULL, 'chaine', 0, '', $conf->entity)) $error++;
+
+        if (! dolibarr_set_const($db, 'LDAP_KEY_USERS', $_SERVER['DOLIBARR_LDAP_KEY_USERS'] ?? 'LDAP_FIELD_FULLNAME', 'chaine', 0, '', $conf->entity)) $error++;
+        if (! $error)
+		{
+            $db->commit();
+            echo 'Successfully updated the database';
+		}
+		else
+		{
+            $db->rollback();
+            trigger_error('Did not update constants in database', E_WARNING);
+		}
+
     default:
         echo 'Usage: '.$argv[0].'[step]';
-        echo '    step can be step1, step2 or step5';
-        echo '    if no step is specified all steps are executed in order';
+        echo '    step can be step1, step2, step5 or dbupdate';
         break;
 }
