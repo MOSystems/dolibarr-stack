@@ -19,7 +19,7 @@ function install_log($message, $level) {
 
 function custom_error_handler(int $errno , string $errstr , string $errfile , int $errline , array $errcontext) {
     if (error_reporting() === 0) return FALSE;
-    fputs(STDERR, "ERROR\t$errstr in $errfile:$errline".PHP_EOL);
+    install_log("$errstr in $errfile:$errline", LOG_ERR);
     ob_end_clean();
     exit(1);
 }
@@ -211,7 +211,7 @@ switch ($step) {
         if ($errors === 0)
 		{
             $db->commit();
-            echo 'Successfully updated the database';
+            install_log('Successfully updated the database', LOG_INFO);
 		}
 		else
 		{
