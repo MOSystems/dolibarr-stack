@@ -159,6 +159,8 @@ switch ($step) {
                     $key = "DOLIBARR_{$const}";
                 } else return TRUE;
                 $value = $array[$key];
+            } else {
+                $value = $value[0];
             }
             if (is_null($value)) return TRUE;
             return dolibarr_set_const($db, $const, $value, 'chaine', 0, '', $conf->entity);
