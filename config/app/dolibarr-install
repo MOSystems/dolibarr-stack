@@ -1,6 +1,22 @@
 #!/usr/local/bin/php
 <?php
 
+function install_log($message, $level) {
+    $levels = [
+        LOG_EMERG => 'EMERG',
+        LOG_ALERT => 'ALERT',
+        LOG_CRIT => 'CRIT',
+        LOG_ERR => 'ERR',
+        LOG_WARNING => 'WARNING',
+        LOG_NOTICE => 'NOTICE',
+        LOG_INFO => 'INFO',
+        LOG_DEBUG => 'DEBUG',
+    ];
+    $stream = $level <= LOG_WARNING ? STDERR : STDOUT;
+    $timestamp = date(DATE_RFC3339);
+    fputs($stream, "$timestamp {$levels[$level]}: $message".PHP_EOL);
+}
+
 function custom_error_handler(int $errno , string $errstr , string $errfile , int $errline , array $errcontext) {
     if (error_reporting() === 0) return FALSE;
     fputs(STDERR, "ERROR\t$errstr in $errfile:$errline".PHP_EOL);
