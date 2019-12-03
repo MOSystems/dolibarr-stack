@@ -218,6 +218,7 @@ switch ($step) {
             $db->rollback();
             trigger_error('Did not update constants in database', E_WARNING);
 		}
+        break;
 
     default:
         echo 'Usage: '.$argv[0].'[step]';
