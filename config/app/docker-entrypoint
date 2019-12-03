@@ -7,12 +7,12 @@ if [ -d "$DIR" ]; then
     /bin/run-parts --verbose "$DIR"
 fi
 
+export XDEBUG_CONFIG='remote_enable=1 remote_autostart=1 remote_host=172.17.0.1'
 if [ ! -e "/documents/install.lock" ]; then
-    export XDEBUG_CONFIG='remote_enable=1 remote_autostart=1 remote_host=172.17.0.1'
     gosu www-data dolibarr-install
 fi
 
 # always update db configuration from environment variables
-# gosu www-data dolibarr-install dbupdate
+gosu www-data dolibarr-install dbupdate
 
 exec docker-php-entrypoint "$@"
